@@ -8,7 +8,7 @@ router.post('/download', (req, res) => {
     var stopAt = parseInt(req.body.inputEnd);
     var update = req.body.updateData;
 
-    console.log(`Processing entry ${startAt} to ${stopAt}. Updating fetched: ${update}`)
+    console.log(`Processing entry ${startAt} to ${stopAt}. Updating mode: ${update}`)
 
     const timer = ms => new Promise(res => setTimeout(res, ms))
 
@@ -90,7 +90,7 @@ function processEntry(html) {
     obj["id"] = parseInt(getGroup(html, /href="https:\/\/myanimelist\.net\/character\/(\d+)\//));
     var rawName = getGroup(html, /alt="(.+?(?="))"/);
     obj["parsedName"] = (rawName.includes(", ")) ? `${rawName.split(", ")[1]} ${rawName.split(", ")[0]}` : rawName;
-    obj["nativeName"] = getGroup(html, /\((.+)\)<\/span>/);
+    obj["nativeName"] = getGroup(html, /fs12 fn-grey\d">\((.+)\)<\/span>/);
     obj["rawName"] = rawName;
     obj["characterPage"] = getGroup(html, /href="(.+)" id="#area" rel="#info">/);
     obj["tinyImage"] = getGroup(html, /data-src="(.+?(?="))"/);
@@ -110,10 +110,15 @@ function processEntry(html) {
     (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourcePage, likes, likeRank) 
     VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}","${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
     ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", source = "${obj.source}", sourcePage = "${obj.sourcePage}", likes = ${obj.likes}, likeRank = ${obj.likeRank};`, function (err, result) {
-        if (err) throw err;
-        else {
-            console.log(`Added or updated ${obj["parsedName"]}.`);
+        if (err) {
+            console.log("\n=====================================\n")
             console.log(obj);
+            console.log("\n" + html)
+            throw err;
+        }
+        else {
+            //console.log(`Added or updated ${obj["parsedName"]}.`);
+            //console.log(obj);
         }
     });
 
