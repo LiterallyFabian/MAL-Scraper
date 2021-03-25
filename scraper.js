@@ -2,7 +2,6 @@ var express = require('express');
 var router = express.Router();
 var scrape = require('website-scraper');
 var fs = require('fs')
-var log = require('log-to-file');
 
 router.post('/download', (req, res) => {
     var startAt = parseInt(req.body.inputStart);
