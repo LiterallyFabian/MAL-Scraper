@@ -151,7 +151,7 @@ router.post('/getdata', (req, res) => {
     console.log("Searching for " + search)
     //char.parsedName, char.source, char.largeImage, char.characterPage
     connection.query(`
-    SELECT parsedName,source,largeImage,characterPage FROM characters 
+    SELECT parsedName,source,largeImage,characterPage,likeRank FROM characters 
     WHERE parsedName LIKE '${search}%' OR source LIKE '${search}%' OR rawName LIKE '${search}%' OR sourceList LIKE '%[\"${search}%'
     ORDER BY likes DESC LIMIT 100`, function (err, result) {
         if (err) throw err;
@@ -159,7 +159,15 @@ router.post('/getdata', (req, res) => {
             res.send(result);
         }
     });
-
 });
+
+router.get('/getall', (req,res) =>{
+    connection.query(`SELECT * FROM characters`, function (err, result) {
+        if (err) throw err;
+        else {
+            res.send(result);
+        }
+    });
+})
 
 module.exports = router;
