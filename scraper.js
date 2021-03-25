@@ -106,6 +106,7 @@ function processEntry(html) {
         obj["sourcePage"] = getGroup(html, /mangaography"><div class="title"><a href="(.+?(?=">))">/);
     }
 
+
     connection.query(`INSERT INTO characters 
     (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourcePage, likes, likeRank) 
     VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}","${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
@@ -117,7 +118,7 @@ function processEntry(html) {
             throw err;
         }
         else {
-            //console.log(`Added or updated ${obj["parsedName"]}.`);
+            console.log(`Added or updated ${obj["parsedName"]}.`);
             //console.log(obj);
         }
     });
