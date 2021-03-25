@@ -37,10 +37,25 @@
                 <label for="inputEnd" class="form-label">End rank</label>
                 <input type="number" class="form-control" name="inputEnd" id="inputEnd" value="100" step="50">
             </div>
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" name="updateFetched" id="updateFetched">
-                <label class="form-check-label" for="updateFetched">Update already fetched pages</label>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="updateData" id="fetchMissing" value="missing" checked>
+                <label class="form-check-label" for="fetchMissing">
+                    Only download and parse missing
+                </label>
             </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="updateData" id="parseFetched" value="fetched">
+                <label class="form-check-label" for="parseFetched">
+                    Parse already fetched pages
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="updateData" id="downloadFetched" value="all">
+                <label class="form-check-label" for="downloadFetched">
+                    Re-download already fetched pages
+                </label>
+            </div>
+            <br>
             <button type="submit" class="btn btn-primary">Submit</button>
         </form>
     </div>

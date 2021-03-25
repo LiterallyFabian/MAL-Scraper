@@ -1,14 +1,13 @@
 var express = require('express');
 var router = express.Router();
-var fetch = require('node-fetch');
-var HTMLParser = require('node-html-parser');
 var scrape = require('website-scraper');
 var fs = require('fs')
+var log = require('log-to-file');
 
 router.post('/download', (req, res) => {
     var startAt = parseInt(req.body.inputStart);
     var stopAt = parseInt(req.body.inputEnd);
-    var update = req.body.updateFetched == "on";
+    var update = req.body.updateData;
 
     console.log(`Processing entry ${startAt} to ${stopAt}. Updating fetched: ${update}`)
 
@@ -16,16 +15,30 @@ router.post('/download', (req, res) => {
 
     async function load() {
         for (var i = startAt; i < stopAt; i += 50) {
+            var dirPath = `./data/${i}/index.html`;
+            var downloading = false;
 
-            //check if file exists & download if needed
-            if (fs.existsSync(`./data/${i}/index.html`)) {
-                if (update) downloadFile(i);
+            //check if file exists & download/parse if needed
+            if (fs.existsSync(dirPath)) {
+                if (update == "all") { //redownload file if everything should be updated
+                    fs.rmdir(dirPath, {
+                        recursive: true
+                    }, (err) => {
+                        if (err) {
+                            throw err;
+                        }
+                        downloadFile(i);
+                        downloading = true;
+                    });
+                } else if (update == "fetched") { //parse file if it should be updated
+                    processFile(dirPath);
+                }
             } else {
                 downloadFile(i);
+                downloading = true;
             }
-
             //add 5-15s delay to the next query
-            await timer(5000 + Math.floor(Math.random() * Math.floor(15000)));
+            await timer(downloading ? 5000 + Math.floor(Math.random() * Math.floor(15000)) : 0);
         }
         console.log(`Done! Added ${stopAt-startAt} characters.`)
     }
@@ -33,8 +46,6 @@ router.post('/download', (req, res) => {
 });
 
 function downloadFile(index) {
-    let reg = /<tr class="ranking-list">(.+?(?=<\/tr>))/gm
-
     //scraping options
     const options = {
         urls: [`https://myanimelist.net/character.php?limit=${index}`],
@@ -48,27 +59,28 @@ function downloadFile(index) {
     };
 
     //scrape page
-    console.log(`Getting page ${index}-${index+50}...`)
+    console.log(`Downloading page ${index}-${index+50}...`)
     scrape(options).then((result) => {
-        fs.readFile(`./data/${index}/index.html`, 'utf8', (err, data) => {
-            if (err) {
-                console.error(err)
-                return
-            }
-            data = data.replace(/(\r\n|\n|\r)/gm, "");
-            let matches = (data.match(reg) || []).map(e => e.replace(reg, '$1'));
-
-            matches.forEach(entry => {
-                processEntry(entry);
-            })
-        })
+        processFile(`./data/${index}/index.html`);
     });
+}
 
+function processFile(path) {
+    fs.readFile(path, 'utf8', (err, data) => {
+        if (err) {
+            console.error(err)
+            return
+        }
+        //remove new lines
+        data = data.replace(/(\r\n|\n|\r)/gm, "");
 
-    /*
-     */
+        let reg = /<tr class="ranking-list">(.+?(?=<\/tr>))/gm
+        let matches = (data.match(reg) || []).map(e => e.replace(reg, '$1'));
 
-
+        matches.forEach(entry => {
+            processEntry(entry);
+        })
+    })
 }
 
 //Processes a html block for a character (<tr class="ranking-list">...</tr>)
@@ -91,18 +103,18 @@ function processEntry(html) {
 
     //set manga if character does not have an anime
     if (obj.source == undefined) {
-        console.log("undefined for " + obj.parsedName)
         obj["source"] = getGroup(html, /mangaography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
         obj["sourcePage"] = getGroup(html, /mangaography"><div class="title"><a href="(.+?(?=">))">/);
     }
 
     connection.query(`INSERT INTO characters 
-    (id, parsedName, nativeName, rawName, characterPage, tinyImage, source, sourcePage, likes, likeRank) 
-    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.source}","${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
+    (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourcePage, likes, likeRank) 
+    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}","${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
     ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", source = "${obj.source}", sourcePage = "${obj.sourcePage}", likes = ${obj.likes}, likeRank = ${obj.likeRank};`, function (err, result) {
         if (err) throw err;
         else {
             console.log(`Added or updated ${obj["parsedName"]}.`);
+            console.log(obj);
         }
     });
 
