@@ -88,36 +88,49 @@ function processEntry(html) {
     var obj = {};
 
     obj["id"] = parseInt(getGroup(html, /href="https:\/\/myanimelist\.net\/character\/(\d+)\//));
-    var rawName = getGroup(html, /alt="(.+?(?="))"/);
-    obj["parsedName"] = (rawName.includes(", ")) ? `${rawName.split(", ")[1]} ${rawName.split(", ")[0]}` : rawName;
+    obj["rawName"] = getGroup(html, /alt="(.+?(?="))"/);
+    obj["parsedName"] = (obj["rawName"].includes(", ")) ? `${obj["rawName"].split(", ")[1]} ${obj["rawName"].split(", ")[0]}` : obj["rawName"];
     obj["nativeName"] = getGroup(html, /fs12 fn-grey\d">\((.+)\)<\/span>/);
-    obj["rawName"] = rawName;
     obj["characterPage"] = getGroup(html, /href="(.+)" id="#area" rel="#info">/);
     obj["tinyImage"] = getGroup(html, /data-src="(.+?(?="))"/);
     obj["largeImage"] = `https://cdn.myanimelist.net/images/characters/${getGroup(obj.tinyImage, /characters\/(\d+\/\d+).(png|jpg|webp|jpeg)/)}.jpg`;
-    obj["source"] = getGroup(html, /animeography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
-    obj["sourcePage"] = getGroup(html, /animeography"><div class="title"><a href="(.+?(?=">))">/);
     obj["likes"] = parseInt(getGroup(html, /class="favorites">(.+?(?=<\/td>))<\/td>/).replace(",", ""));
     obj["likeRank"] = parseInt(getGroup(html, /pepole-rank-text rank\d">(\d+)<\/span>/g));
 
-    //set manga if character does not have an anime
+
+    //get source
+    obj["sourceList"] = [];
+    let sourcereg = /<div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/g;
+    var rawSources = html.match(sourcereg);
+
+    if(rawSources == null) return;
+
+    rawSources.forEach(entry => {
+        obj["sourceList"].push(JSON.stringify((entry.match(sourcereg) || []).map(e => e.replace(sourcereg, '$1'))));
+    });
+
+    
+    
+
+    obj["source"] = getGroup(html, /animeography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
+    obj["sourcePage"] = getGroup(html, /animeography"><div class="title"><a href="(.+?(?=">))">/);
+
+    //set first manga as main source if character does not have an anime
     if (obj.source == undefined) {
         obj["source"] = getGroup(html, /mangaography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
         obj["sourcePage"] = getGroup(html, /mangaography"><div class="title"><a href="(.+?(?=">))">/);
     }
 
-
     connection.query(`INSERT INTO characters 
-    (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourcePage, likes, likeRank) 
-    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}","${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
-    ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", source = "${obj.source}", sourcePage = "${obj.sourcePage}", likes = ${obj.likes}, likeRank = ${obj.likeRank};`, function (err, result) {
+    (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourceList, sourcePage, likes, likeRank) 
+    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}",'${JSON.stringify(obj.sourceList)}',"${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
+    ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", source = "${obj.source}", sourcePage = "${obj.sourcePage}", sourceList = '${JSON.stringify(obj.sourceList)}', likes = ${obj.likes}, likeRank = ${obj.likeRank};`, function (err, result) {
         if (err) {
             console.log("\n=====================================\n")
             console.log(obj);
             console.log("\n" + html)
             throw err;
-        }
-        else {
+        } else {
             console.log(`Added or updated ${obj["parsedName"]}.`);
             //console.log(obj);
         }
@@ -137,7 +150,10 @@ router.post('/getdata', (req, res) => {
     var search = req.body.search;
     console.log("Searching for " + search)
     //char.parsedName, char.source, char.largeImage, char.characterPage
-    connection.query(`SELECT parsedName,source,largeImage,characterPage FROM characters WHERE parsedName LIKE '${search}%' OR source LIKE '${search}%' or rawName LIKE '${search}%' ORDER BY likes DESC LIMIT 100`, function (err, result) {
+    connection.query(`
+    SELECT parsedName,source,largeImage,characterPage FROM characters 
+    WHERE parsedName LIKE '${search}%' OR source LIKE '${search}%' OR rawName LIKE '${search}%' OR sourceList LIKE '%[\"${search}%'
+    ORDER BY likes DESC LIMIT 100`, function (err, result) {
         if (err) throw err;
         else {
             res.send(result);
