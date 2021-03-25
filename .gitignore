@@ -341,3 +341,6 @@ healthchecksdb
 
 # Scrape-data
 data/
+
+#obv
+.env
