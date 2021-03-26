@@ -103,14 +103,14 @@ function processEntry(html) {
     let sourcereg = /<div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/g;
     var rawSources = html.match(sourcereg);
 
-    if(rawSources == null) return;
+    if (rawSources == null || obj["largeImage"] == "https://cdn.myanimelist.net/images/characters/undefined.jpg") return;
 
     rawSources.forEach(entry => {
         obj["sourceList"].push(JSON.stringify((entry.match(sourcereg) || []).map(e => e.replace(sourcereg, '$1'))));
     });
 
-    
-    
+
+
 
     obj["source"] = getGroup(html, /animeography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
     obj["sourcePage"] = getGroup(html, /animeography"><div class="title"><a href="(.+?(?=">))">/);
@@ -161,7 +161,7 @@ router.post('/getdata', (req, res) => {
     });
 });
 
-router.get('/getall', (req,res) =>{
+router.get('/getall', (req, res) => {
     connection.query(`SELECT * FROM characters`, function (err, result) {
         if (err) throw err;
         else {
