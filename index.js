@@ -1,4 +1,5 @@
 var scraper = require('./scraper.js');
+var editor = require("./editor");
 const http = require('http');
 const express = require('express');
 const mysql2 = require('mysql2');
@@ -34,6 +35,7 @@ connection.connect(function (e) {
 });
 
 app.use('/scraper', scraper);
+app.use('/editor', editor);
 
 const port = 3000;
 
