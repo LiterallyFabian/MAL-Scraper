@@ -10,8 +10,8 @@ router.post("/getdupes", (req, res) => {
             var unique = [];
             var nonUnique = [];
 
-            result.forEach(char =>{
-                if(!unique.includes(char.parsedName)) unique.push(char.parsedName);
+            result.forEach(char => {
+                if (!unique.includes(char.parsedName)) unique.push(char.parsedName);
                 else(nonUnique.push(char));
             });
             console.log(`Found ${nonUnique.length} duplicates.`)
@@ -20,7 +20,7 @@ router.post("/getdupes", (req, res) => {
     });
 })
 
-router.post("/update", (req,res)=>{
+router.post("/update", (req, res) => {
     var name = req.body.name;
     var id = req.body.id;
     var source = req.body.source;
@@ -36,7 +36,40 @@ router.post("/update", (req,res)=>{
     });
 })
 
-router.post("/delete", (req,res)=>{
+router.post("/create", (req, res) => {
+    var name = req.body.name;
+    var id = req.body.id;
+    var source = req.body.source;
+    var pic = req.body.pic;
+    var page = req.body.page;
+
+    var query = `INSERT INTO characters(id, parsedName, rawName, nativeName, source, largeImage, characterPage, likes, isEdited) VALUES ('${id}', '${name}', '${name}', '${name}',  '${source}', '${pic}', '${page}', 0, 1) 
+                ON DUPLICATE KEY UPDATE parsedName = '${name}', source = '${source}', largeImage = '${pic}', characterPage = '${page}', isEdited = 1`;
+
+    connection.query(query, function (err, result) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(`Added or updated character ${name}, ID ${id}`)
+            res.send(true);
+        }
+    });
+})
+
+router.post("/fetch", (req, res) => {
+    var id = req.body.id;
+
+    connection.query(`SELECT * FROM characters WHERE id = ${id}`, function (err, result) {
+        if (err) {
+            throw err;
+        } else {
+            if(result.length>0) res.send(result);
+            else res.send(false)
+        }
+    });
+})
+
+router.post("/delete", (req, res) => {
     var id = req.body.id;
     var oldName = req.body.oldName;
     var id = req.body.id;
