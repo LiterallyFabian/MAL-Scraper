@@ -149,11 +149,14 @@ function getGroup(string, regex) {
 router.post('/getdata', (req, res) => {
     var search = req.body.search;
     console.log("Searching for " + search)
+    
     //char.parsedName, char.source, char.largeImage, char.characterPage
-    connection.query(`
+    var query = `
     SELECT parsedName,source,largeImage,characterPage,likeRank,id FROM characters 
-    WHERE (parsedName LIKE '${search}%' OR source LIKE '${search}%' OR rawName LIKE '${search}%' OR sourceList LIKE '%[\"${search}%')
-    ORDER BY likes DESC LIMIT 100`, function (err, result) {
+    WHERE (parsedName LIKE ${connection.escape(search+"%")} OR source LIKE ${connection.escape(search+"%")} OR rawName LIKE ${connection.escape(search+"%")} OR sourceList LIKE ${connection.escape(`%["${search}%`)})
+    ORDER BY likes DESC LIMIT 100`;
+
+    connection.query(query, function (err, result) {
         if (err) throw err;
         else {
             res.send(result);
