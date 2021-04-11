@@ -151,7 +151,7 @@ router.post('/getdata', (req, res) => {
     console.log("Searching for " + search)
     //char.parsedName, char.source, char.largeImage, char.characterPage
     connection.query(`
-    SELECT parsedName,source,largeImage,characterPage,likeRank FROM characters 
+    SELECT parsedName,source,largeImage,characterPage,likeRank,id FROM characters 
     WHERE (parsedName LIKE '${search}%' OR source LIKE '${search}%' OR rawName LIKE '${search}%' OR sourceList LIKE '%[\"${search}%')
     ORDER BY likes DESC LIMIT 100`, function (err, result) {
         if (err) throw err;

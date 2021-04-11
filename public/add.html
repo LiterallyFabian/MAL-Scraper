@@ -71,6 +71,16 @@
                 }
 
             },
+            mounted: function editpost() {
+                this.$nextTick(function () {
+                    var url = new URL(window.location.href);
+                    var edit = url.searchParams.get("character");
+                    if (edit != null) {
+                        this.id = edit;
+                        this.fetch();
+                    }
+                })
+            },
             methods: {
                 async update() {
                     await axios.post("/editor/create", {
