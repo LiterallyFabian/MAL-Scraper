@@ -82,7 +82,7 @@ router.post("/upload", (req, res) => {
     cloudinary.uploader.upload(
         pic, {
             public_id: `characters/${id}`,
-            context: `name=${name}|source=${source}`
+            context: `name=${name}|source=${source}|id=${id}`
         },
         function (error, result) {
             if (error) {
