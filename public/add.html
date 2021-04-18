@@ -97,7 +97,10 @@
                 async upload() {
                     await axios.post("/editor/upload", {
                         id: this.id,
+                        name: this.name,
+                        source: this.source,
                         pic: this.pic,
+                        page: this.page
                     }).then(res => {
                         console.log(res)
                         if (res.data) this.pic = res.data;

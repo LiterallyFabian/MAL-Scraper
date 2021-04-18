@@ -72,13 +72,17 @@ router.post("/fetch", (req, res) => {
 
 //uploads pic to Cloudinary 
 router.post("/upload", (req, res) => {
+    var name = req.body.name;
     var id = req.body.id;
+    var source = req.body.source;
     var pic = req.body.pic;
+    var page = req.body.page;
 
     //upload pic to cloudinary
     cloudinary.uploader.upload(
         pic, {
-            public_id: `characters/${id}`
+            public_id: `characters/${id}`,
+            context: `name=${name}|source=${source}`
         },
         function (error, result) {
             if (error) {
