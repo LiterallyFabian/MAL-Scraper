@@ -55,6 +55,7 @@
                 <br>
                 <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="update">{{action}}</button>
                 <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="fetch">Fetch</button>
+                <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="upload">Upload picture</button>
                 <button type="button" class="btn btn-danger" v-on:click="resetForm">Clear</button>
         </form>
     </div>
@@ -91,6 +92,15 @@
                         page: this.page
                     }).then(res => {
                         if (res.data) alert(`Character ${this.name} has been ${this.action == "Create" ? "created" : "added"}.`)
+                    })
+                },
+                async upload() {
+                    await axios.post("/editor/upload", {
+                        id: this.id,
+                        pic: this.pic,
+                    }).then(res => {
+                        console.log(res)
+                        if (res.data) this.pic = res.data;
                     })
                 },
                 async fetch() {

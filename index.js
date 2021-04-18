@@ -7,12 +7,13 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const app = express();
+var cloudinary = require('cloudinary').v2;
 require('dotenv').config();
 
 app.set('trust proxy', true);
 app.use(express.static(path.join(__dirname, '')));
 app.use(express.json());
-app.use(express.static(__dirname + "/public",{
+app.use(express.static(__dirname + "/public", {
     extensions: ['html', 'htm']
 }));
 app.use(bodyParser.urlencoded({
@@ -24,6 +25,12 @@ connection = mysql2.createConnection({
     user: process.env.mysql_user,
     password: process.env.mysql_password,
     database: process.env.mysql_database
+});
+
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD,
+    api_key: process.env.CLOUDINARY_KEY,
+    api_secret: process.env.CLOUDINARY_SECRET
 });
 
 connection.connect(function (e) {
@@ -45,4 +52,3 @@ const server = http.createServer(app);
 server.listen(port, () => {
     console.log(`I'm alive`);
 });
-

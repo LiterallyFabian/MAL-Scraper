@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+var cloudinary = require('cloudinary').v2;
 
 router.post("/getdupes", (req, res) => {
     console.log("Getting duplicates...")
@@ -63,16 +64,42 @@ router.post("/fetch", (req, res) => {
         if (err) {
             throw err;
         } else {
-            if(result.length>0) res.send(result);
+            if (result.length > 0) res.send(result);
             else res.send(false)
         }
     });
 })
 
+//uploads pic to Cloudinary 
+router.post("/upload", (req, res) => {
+    var id = req.body.id;
+    var pic = req.body.pic;
+
+    //upload pic to cloudinary
+    cloudinary.uploader.upload(
+        pic, {
+            public_id: `characters/${id}`
+        },
+        function (error, result) {
+            if (error) {
+                throw error;
+            } else {
+                res.send(result.secure_url)
+                connection.query(`UPDATE characters SET largeImage = '${result.secure_url}' WHERE id = ${id}`, function (err, result) {
+                    if (err) {
+                        throw err;
+                    } else {
+                        console.log(`Updated image link for ID ${id}.`)
+                    }
+                });
+            }
+        }
+    );
+})
+
 router.post("/delete", (req, res) => {
     var id = req.body.id;
     var oldName = req.body.oldName;
-    var id = req.body.id;
     var source = req.body.source;
 
     connection.query(`DELETE FROM characters WHERE id = ${id}`, function (err, result) {
