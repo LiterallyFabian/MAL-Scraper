@@ -2,6 +2,8 @@ var express = require('express');
 var router = express.Router();
 var scrape = require('website-scraper');
 var fs = require('fs')
+var cloudinary = require('cloudinary').v2;
+const timer = ms => new Promise(res => setTimeout(res, ms))
 
 router.post('/download', (req, res) => {
     var startAt = parseInt(req.body.inputStart);
@@ -10,39 +12,75 @@ router.post('/download', (req, res) => {
 
     console.log(`Processing entry ${startAt} to ${stopAt}. Updating mode: ${update}`)
 
-    const timer = ms => new Promise(res => setTimeout(res, ms))
 
-    async function load() {
-        for (var i = startAt; i < stopAt; i += 50) {
-            var dirPath = `./data/${i}/index.html`;
-            var downloading = false;
-
-            //check if file exists & download/parse if needed
-            if (fs.existsSync(dirPath)) {
-                if (update == "all") { //redownload file if everything should be updated
-                    fs.rmdir(dirPath, {
-                        recursive: true
-                    }, (err) => {
-                        if (err) {
-                            throw err;
-                        }
-                        downloadFile(i);
-                        downloading = true;
-                    });
-                } else if (update == "fetched") { //parse file if it should be updated
-                    processFile(dirPath);
-                }
-            } else {
-                downloadFile(i);
-                downloading = true;
-            }
-            //add 5-15s delay to the next query
-            await timer(downloading ? 5000 + Math.floor(Math.random() * Math.floor(15000)) : 0);
-        }
-        console.log(`Done! Added ${stopAt-startAt} characters.`)
-    }
-    load();
+    if (update != "cdn") load(startAt, stopAt, update);
+    else uploadCdn(startAt, stopAt);
 });
+
+async function load(startAt, stopAt, update) {
+    for (var i = startAt; i < stopAt; i += 50) {
+        var dirPath = `./data/${i}/index.html`;
+        var downloading = false;
+
+        //check if file exists & download/parse if needed
+        if (fs.existsSync(dirPath)) {
+            if (update == "all") { //redownload file if everything should be updated
+                fs.rmdir(dirPath, {
+                    recursive: true
+                }, (err) => {
+                    if (err) {
+                        throw err;
+                    }
+                    downloadFile(i);
+                    downloading = true;
+                });
+            } else if (update == "fetched") { //parse file if it should be updated
+                processFile(dirPath);
+            }
+        } else if (update == "missing") {
+            downloadFile(i);
+            downloading = true;
+        }
+        //add 5-15s delay to the next query
+        await timer(downloading ? 5000 + Math.floor(Math.random() * Math.floor(15000)) : 0);
+    }
+    console.log(`Done! Added ${stopAt-startAt} characters.`)
+}
+
+async function uploadCdn(startAt, stopAt) {
+    connection.query(`SELECT largeImage,parsedName,id,likeRank,source,characterPage FROM characters WHERE likeRank >= ${startAt} AND likeRank <= ${stopAt}`, function (err, result) {
+        if (err) throw err;
+        else {
+            result.forEach(char => {
+                //upload pic to cloudinary
+                if (char.largeImage.includes("res.cloudinary.com")) return;
+                cloudinary.uploader.upload(
+                    char.largeImage, {
+                        public_id: `characters/${char.id}`,
+                        context: `name=${char.parsedName}|source=${char.source}|id=${char.id}`,
+                        overwrite: true
+                    },
+                    function (error, result) {
+                        if (error) {
+                            console.error(`Error uploading character ${char.parsedName} with ID ${char.id}.`)
+                            console.error(char);
+                            throw error;
+                        } else {
+                            connection.query(`UPDATE characters SET largeImage = '${result.secure_url}' WHERE id = ${char.id}`, function (err, sqlresult) {
+                                if (err) {
+                                    throw err;
+                                } else {
+                                    console.log(`Updated image link for ${char.parsedName}, ID ${char.id}.   ${result.secure_url}`)
+                                }
+                            });
+                        }
+                    }
+                );
+            })
+            console.log(`Done! Uploaded ${stopAt-startAt} characters.`)
+        }
+    });
+}
 
 function downloadFile(index) {
     //scraping options
@@ -149,7 +187,7 @@ function getGroup(string, regex) {
 router.post('/getdata', (req, res) => {
     var search = req.body.search;
     console.log("Searching for " + search)
-    
+
     //char.parsedName, char.source, char.largeImage, char.characterPage
     var query = `
     SELECT parsedName,source,largeImage,characterPage,likeRank,id FROM characters 

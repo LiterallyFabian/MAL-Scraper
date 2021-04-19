@@ -31,11 +31,11 @@
         <form id="form">
             <div class="mb-3">
                 <label for="inputStart" class="form-label">Start rank</label>
-                <input type="number" class="form-control" name="inputStart" id="inputStart" value="0" step="50">
+                <input type="number" class="form-control" name="inputStart" id="inputStart" value="0">
             </div>
             <div class="mb-3">
                 <label for="inputEnd" class="form-label">End rank</label>
-                <input type="number" class="form-control" name="inputEnd" id="inputEnd" value="100" step="50">
+                <input type="number" class="form-control" name="inputEnd" id="inputEnd" value="100">
             </div>
             <div class="form-check">
                 <input class="form-check-input" type="radio" name="updateData" id="fetchMissing" value="missing" checked>
@@ -53,6 +53,12 @@
                 <input class="form-check-input" type="radio" name="updateData" id="downloadFetched" value="all">
                 <label class="form-check-label" for="downloadFetched">
                     Re-download already fetched pages
+                </label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="radio" name="updateData" id="uploadImages" value="cdn">
+                <label class="form-check-label" for="uploadImages">
+                    Upload images to CDN
                 </label>
             </div>
             <br>
