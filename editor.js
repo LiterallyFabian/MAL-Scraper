@@ -51,7 +51,11 @@ router.post("/create", (req, res) => {
         if (err) {
             throw err;
         } else {
-            console.log(`Added or updated character ${name}, ID ${id}`)
+            console.log(`Added or updated character ${name}, ID ${id}`);
+            if (pic.includes("cloudinary")) {
+                console.log("Updating image " + pic)
+                updateImage(id, `name=${name}|source=${source}|id=${id}|characterPage=${page}`)
+            }
             res.send(true);
         }
     });
@@ -78,27 +82,7 @@ router.post("/upload", (req, res) => {
     var pic = req.body.pic;
     var page = req.body.page;
 
-    //upload pic to cloudinary
-    cloudinary.uploader.upload(
-        pic, {
-            public_id: `characters/${id}`,
-            context: `name=${name}|source=${source}|id=${id}`
-        },
-        function (error, result) {
-            if (error) {
-                throw error;
-            } else {
-                res.send(result.secure_url)
-                connection.query(`UPDATE characters SET largeImage = '${result.secure_url}' WHERE id = ${id}`, function (err, result) {
-                    if (err) {
-                        throw err;
-                    } else {
-                        console.log(`Updated image link for ID ${id}.`)
-                    }
-                });
-            }
-        }
-    );
+    uploadImage(pic, id, `name=${name}|source=${source}|id=${id}|characterPage=${page}`, res);
 })
 
 router.post("/delete", (req, res) => {
@@ -115,4 +99,36 @@ router.post("/delete", (req, res) => {
         }
     });
 })
+
+async function uploadImage(pic, id, context, res = false) {
+    cloudinary.uploader.upload(
+        pic, {
+            public_id: `characters/${id}`,
+            context: context
+        },
+        function (error, result) {
+            if (error) {
+                throw error;
+            } else {
+                connection.query(`UPDATE characters SET largeImage = '${result.secure_url}' WHERE id = ${id}`, function (err, sqlresult) {
+                    if (err) {
+                        throw err;
+                    } else {
+                        console.log(`Updated image link for ID ${id}.`)
+                        if (res) res.send(result.secure_url);
+                    }
+                });
+            }
+        }
+    );
+}
+
+var updateImage = function updateImage(id, context) {
+    cloudinary.api.update(`characters/${id}`, {
+        context: context
+    }, function (error, result) {
+        if (error) throw error;
+    })
+}
+
 module.exports = router;

@@ -53,7 +53,11 @@ async function uploadCdn(startAt, stopAt) {
         else {
             result.forEach(char => {
                 //upload pic to cloudinary
-                if (char.largeImage.includes("res.cloudinary.com")) return;
+                if (char.largeImage.includes("res.cloudinary.com")) {
+                    console.log(char);
+                    updateImage(char.id, `name=${char.parsedName}|source=${char.source}|id=${char.id}|characterPage=${char.characterPage}`)
+                    return;
+                }
                 cloudinary.uploader.upload(
                     char.largeImage, {
                         public_id: `characters/${char.id}`,
@@ -210,5 +214,14 @@ router.get('/getall', (req, res) => {
         }
     });
 })
+
+
+var updateImage = function updateImage(id, context) {
+    cloudinary.api.update(`characters/${id}`, {
+        context: context
+    }, function (error, result) {
+        if (error) throw error;
+    })
+}
 
 module.exports = router;
