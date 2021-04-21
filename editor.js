@@ -27,7 +27,7 @@ router.post("/update", (req, res) => {
     var source = req.body.source;
     var oldName = req.body.oldName;
 
-    connection.query(`UPDATE characters SET parsedName = '${name}', isEdited = true WHERE id = ${id}`, function (err, result) {
+    connection.query(`UPDATE characters SET parsedName =  ${connection.escape(name)}, isEdited = true WHERE id = ${id}`, function (err, result) {
         if (err) {
             throw err;
         } else {
@@ -38,14 +38,14 @@ router.post("/update", (req, res) => {
 })
 
 router.post("/create", (req, res) => {
-    var name = req.body.name;
-    var id = req.body.id;
-    var source = req.body.source;
-    var pic = req.body.pic;
-    var page = req.body.page;
+    var name = connection.escape(req.body.name);
+    var id = connection.escape(req.body.id);
+    var source = connection.escape(req.body.source);
+    var pic = connection.escape(req.body.pic);
+    var page = connection.escape(req.body.page);
 
-    var query = `INSERT INTO characters(id, parsedName, rawName, nativeName, source, largeImage, characterPage, likes, isEdited) VALUES ('${id}', '${name}', '${name}', '${name}',  '${source}', '${pic}', '${page}', 0, 1) 
-                ON DUPLICATE KEY UPDATE parsedName = '${name}', source = '${source}', largeImage = '${pic}', characterPage = '${page}', isEdited = 1`;
+    var query = `INSERT INTO characters(id, parsedName, rawName, nativeName, source, largeImage, characterPage, likes, isEdited) VALUES (${id}, ${name}, ${name}, ${name},  ${source}, ${pic}, ${page}, 0, 1) 
+                ON DUPLICATE KEY UPDATE parsedName = ${name}, source = ${source}, largeImage = ${pic}, characterPage = ${page}, isEdited = 1`;
 
     connection.query(query, function (err, result) {
         if (err) {
