@@ -100,6 +100,23 @@ router.post("/delete", (req, res) => {
     });
 })
 
+router.post("/batchrename",(req, res) => {
+    var pattern = req.body.pattern;
+    var newName = req.body.name;
+    var query = `UPDATE characters SET source = "${newName}", isEdited = 1 WHERE source LIKE "${pattern}"`;
+    connection.query(query, function (err, result) {
+        if (err) {
+            throw err;
+        } else {
+            console.log(query);
+            console.log(result);
+            console.log(`Renamed shows with pattern '${pattern}' to ${newName}'.`);
+            res.send(true);
+        }
+    });
+
+})
+
 async function uploadImage(pic, id, context, res = false) {
     cloudinary.uploader.upload(
         pic, {
