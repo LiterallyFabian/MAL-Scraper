@@ -53,6 +53,9 @@
                 <label for="page" class="form-label"><b>Page link</b></label>
                 <input type="text" class="form-control" v-model="page" name="page" id="page" required>
                 <br>
+                <label for="source" class="form-label"><b>Raw data</b></label>
+                <textarea class="form-control" v-model="raw" name="raw" id="raw" rows="1" disabled></textarea>
+                <br>
                 <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="update">{{action}}</button>
                 <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="fetch">Fetch</button>
                 <button type="button" class="btn btn-primary" style="margin-right: 10px;" v-on:click="upload">Upload picture</button>
@@ -122,6 +125,7 @@
                             this.id = res.data[0].id;
                             this.pic = res.data[0].largeImage;
                             this.page = res.data[0].characterPage;
+                            this.raw = JSON.stringify(res.data[0]);
                             this.action = "Update"
                         } else alert("Character not found.")
                     })
