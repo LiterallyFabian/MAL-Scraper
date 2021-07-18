@@ -153,20 +153,25 @@ function processEntry(html) {
 
 
 
-
-    obj["source"] = getGroup(html, /animeography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
+    //obj["source"] = getGroup(html, /animeography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
     obj["sourcePage"] = getGroup(html, /animeography"><div class="title"><a href="(.+?(?=">))">/);
 
     //set first manga as main source if character does not have an anime
     if (obj.source == undefined) {
-        obj["source"] = getGroup(html, /mangaography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
+       // obj["source"] = getGroup(html, /mangaography"><div class="title"><a href=".+?(?=">)">(.+?(?=<\/a>))<\/a>/);
         obj["sourcePage"] = getGroup(html, /mangaography"><div class="title"><a href="(.+?(?=">))">/);
     }
 
+    var animeSourceReg = /myanimelist\.net\/anime\/(\d+)/g;
+    var mangaSourceReg = /myanimelist\.net\/manga\/(\d+)/g;
+
+    obj["animeSources"] = JSON.stringify((html.match(animeSourceReg) || []).map(e => e.replace(animeSourceReg, '$1')));
+    obj["mangaSources"] = JSON.stringify((html.match(mangaSourceReg) || []).map(e => e.replace(mangaSourceReg, '$1')));
+
     connection.query(`INSERT INTO characters 
-    (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourceList, sourcePage, likes, likeRank) 
-    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}",'${JSON.stringify(obj.sourceList)}',"${obj.sourcePage}",${obj.likes},${obj.likeRank}) 
-    ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", source = "${obj.source}", sourcePage = "${obj.sourcePage}", sourceList = '${JSON.stringify(obj.sourceList)}', likes = ${obj.likes}, likeRank = ${obj.likeRank};`, function (err, result) {
+    (id, parsedName, nativeName, rawName, characterPage, tinyImage, largeImage, source, sourceList, sourcePage, likes, likeRank, mangaSources, animeSources) 
+    VALUES(${obj.id},"${obj.parsedName}","${obj.nativeName}","${obj.rawName}","${obj.characterPage}","${obj.tinyImage}","${obj.largeImage}","${obj.source}",'${JSON.stringify(obj.sourceList)}',"${obj.sourcePage}",${obj.likes},${obj.likeRank},'${obj.mangaSources}','${obj.animeSources}') 
+    ON DUPLICATE KEY UPDATE tinyImage = "${obj.tinyImage}", largeImage = "${obj.largeImage}", sourcePage = "${obj.sourcePage}", sourceList = '${JSON.stringify(obj.sourceList)}', likes = ${obj.likes}, likeRank = ${obj.likeRank}, mangaSources = '${obj.mangaSources}', animeSources = '${obj.animeSources}';`, function (err, result) {
         if (err) {
             console.log("\n=====================================\n")
             console.log(obj);
