@@ -79,6 +79,11 @@
                     if (edit != null) {
                         this.id = edit;
                         this.fetch();
+                    } else {
+                        this.name = url.searchParams.get("name");
+                        this.source = url.searchParams.get("source");
+                        this.pic = url.searchParams.get("pic");
+                        this.page = url.searchParams.get("page");
                     }
                 })
             },
