@@ -19,6 +19,10 @@ Character editor
 
 ![image](https://user-images.githubusercontent.com/47401343/162632561-66fca4ee-25d6-4bcc-9cdb-a26ff3459543.png)
 
+Cloudinary backup
+![image](https://user-images.githubusercontent.com/47401343/162632693-9f9a050d-d4f4-4302-9da1-0ceacc34c577.png)
+
+
 
 ### MySQL setup
 
