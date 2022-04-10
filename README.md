@@ -13,7 +13,7 @@ Main interface
 
 Character view
 
-![image](https://user-images.githubusercontent.com/47401343/162632486-057a9762-c31f-41d6-9bf6-c14282577e9d.png)
+![image](https://user-images.githubusercontent.com/47401343/162632675-311b9938-f237-4ef1-ace9-52e5d1cf0f2a.png)
 
 Character editor
 
